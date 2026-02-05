@@ -149,8 +149,6 @@ export default function RomanCipher() {
       overflow: "hidden",
     }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Cinzel:wght@400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap');
-
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
         .grain {
@@ -177,7 +175,7 @@ export default function RomanCipher() {
 
         textarea {
           font-family: 'JetBrains Mono', monospace;
-          font-size: 14px;
+          font-size: 16px;
           background: #FFFFFF;
           border: 1.5px solid rgba(184, 150, 12, 0.2);
           border-radius: 10px;

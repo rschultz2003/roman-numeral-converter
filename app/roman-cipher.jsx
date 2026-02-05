@@ -190,9 +190,9 @@ export default function RomanCipher() {
           border: 1.5px solid rgba(184, 150, 12, 0.2);
           border-radius: 10px;
           color: #e8e4df;
-          padding: 12px 16px 16px;
+          padding: 12px 16px;
           width: 100%;
-          height: 56px;
+          height: 68px;
           resize: none;
           outline: none;
           transition: border-color 0.3s, box-shadow 0.3s;

@@ -360,6 +360,14 @@ export default function RomanCipher() {
           font-weight: 500;
         }
 
+        .output-box::before,
+        .output-box::after,
+        .output-box-secondary::before,
+        .output-box-secondary::after {
+          content: '';
+          flex: 1 1 auto;
+        }
+
         .output-box-secondary {
           background: rgba(255, 255, 255, 0.04);
           border: 1.5px solid rgba(184, 150, 12, 0.12);
@@ -601,10 +609,9 @@ export default function RomanCipher() {
                   fontSize: 20,
                   letterSpacing: 4,
                   color: "#e8e4df",
-                  margin: "auto 0",
                 }}>{output}</span>
               ) : (
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "4px 12px", alignItems: "flex-start", margin: "auto 0" }}>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "4px 12px", alignItems: "flex-start" }}>
                   {letterBreakdown.map((word, wi) => (
                     <div key={wi} style={{ display: "flex", alignItems: "flex-start" }}>
                       {wi > 0 && (
@@ -654,7 +661,7 @@ export default function RomanCipher() {
               </button>
             </div>
             <div className="output-box-secondary" onClick={() => setExpandedOutput("numeric")}>
-              <span style={{ margin: "auto 0" }}>{numericBreakdown}</span>
+              <span>{numericBreakdown}</span>
             </div>
           </div>
         )}

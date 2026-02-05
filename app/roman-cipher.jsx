@@ -62,6 +62,16 @@ function decodeText(encoded) {
   }).join(" ");
 }
 
+function encodeBreakdown(text) {
+  const words = text.toUpperCase().split(/\s+/).filter(Boolean);
+  return words.map(word => {
+    return [...word]
+      .filter(ch => /[A-Z]/.test(ch))
+      .map(ch => ({ letter: ch, roman: LETTER_MAP[ch]?.roman || "" }))
+      .filter(item => item.roman);
+  }).filter(word => word.length > 0);
+}
+
 function encodeWithNumbers(text) {
   const words = text.toUpperCase().split(/\s+/).filter(Boolean);
   return words.map(word => {
@@ -100,6 +110,7 @@ export default function RomanCipher() {
   const [copied, setCopied] = useState(false);
   const [copiedNumeric, setCopiedNumeric] = useState(false);
   const [showRef, setShowRef] = useState(false);
+  const [expandedOutput, setExpandedOutput] = useState(null); // "roman" | "numeric" | null
 
   const output = useMemo(() => {
     if (!input.trim()) return "";
@@ -110,6 +121,11 @@ export default function RomanCipher() {
   const numericBreakdown = useMemo(() => {
     if (!input.trim() || mode !== "encode") return "";
     return encodeWithNumbers(input);
+  }, [input, mode]);
+
+  const letterBreakdown = useMemo(() => {
+    if (!input.trim() || mode !== "encode") return [];
+    return encodeBreakdown(input);
   }, [input, mode]);
 
   const handleCopy = useCallback(async () => {
@@ -133,7 +149,7 @@ export default function RomanCipher() {
 
   return (
     <div style={{
-      minHeight: "100dvh",
+      height: "100dvh",
       display: "flex",
       flexDirection: "column",
       background: "#0a0a08",
@@ -174,12 +190,15 @@ export default function RomanCipher() {
           border: 1.5px solid rgba(184, 150, 12, 0.2);
           border-radius: 10px;
           color: #e8e4df;
-          padding: 14px 16px;
+          padding: 12px 16px;
           width: 100%;
+          height: 56px;
           resize: none;
           outline: none;
           transition: border-color 0.3s, box-shadow 0.3s;
           letter-spacing: 0.5px;
+          overflow-y: auto;
+          overflow-x: hidden;
         }
         textarea:focus {
           border-color: rgba(212, 175, 55, 0.5);
@@ -221,8 +240,8 @@ export default function RomanCipher() {
           background: rgba(255, 255, 255, 0.05);
           border: 1.5px solid rgba(184, 150, 12, 0.2);
           border-radius: 10px;
-          padding: 16px;
-          min-height: 60px;
+          padding: 12px 16px;
+          height: 110px;
           font-family: 'JetBrains Mono', monospace;
           font-size: 15px;
           letter-spacing: 1.5px;
@@ -231,6 +250,9 @@ export default function RomanCipher() {
           word-break: break-all;
           position: relative;
           box-shadow: 0 2px 16px rgba(212, 175, 55, 0.06);
+          overflow-y: auto;
+          overflow-x: hidden;
+          cursor: pointer;
         }
 
         .copy-btn {
@@ -281,6 +303,32 @@ export default function RomanCipher() {
           grid-template-columns: repeat(13, 1fr);
           gap: 5px;
         }
+        @media (max-width: 600px) {
+          .ref-grid {
+            grid-template-columns: repeat(9, 1fr);
+          }
+        }
+
+        .example-grid {
+          display: inline-flex;
+          gap: clamp(12px, 3vw, 24px);
+          align-items: flex-start;
+        }
+        .example-roman {
+          font-family: 'JetBrains Mono', monospace;
+          color: #b8960c;
+          font-size: clamp(14px, 2.5vw, 18px);
+        }
+        .example-letter {
+          color: rgba(255, 255, 255, 0.55);
+          font-size: clamp(13px, 2.2vw, 16px);
+          margin-top: 3px;
+          font-family: 'Cinzel', serif;
+        }
+        .example-dash {
+          color: rgba(255,255,255,0.3);
+          font-size: clamp(14px, 2.5vw, 18px);
+        }
 
         .ref-cell {
           display: flex;
@@ -314,14 +362,76 @@ export default function RomanCipher() {
           background: rgba(255, 255, 255, 0.04);
           border: 1.5px solid rgba(184, 150, 12, 0.12);
           border-radius: 10px;
-          padding: 16px;
-          min-height: 40px;
+          padding: 12px 16px;
+          height: 78px;
           font-family: 'JetBrains Mono', monospace;
           font-size: 15px;
           letter-spacing: 1.5px;
           line-height: 1.8;
           color: rgba(255, 255, 255, 0.7);
           word-break: break-all;
+          overflow-y: auto;
+          overflow-x: hidden;
+          cursor: pointer;
+        }
+
+        .expand-backdrop {
+          position: fixed;
+          inset: 0;
+          background: rgba(0, 0, 0, 0.5);
+          z-index: 300;
+          animation: fadeInBackdrop 0.2s ease forwards;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 20px;
+        }
+
+        .expand-modal {
+          background: #141410;
+          border: 1.5px solid rgba(184, 150, 12, 0.25);
+          border-radius: 16px;
+          padding: 24px;
+          width: 100%;
+          max-width: 560px;
+          max-height: 70dvh;
+          overflow-y: auto;
+          animation: fadeIn 0.25s ease forwards;
+          box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(184, 150, 12, 0.1);
+        }
+
+        .expand-content {
+          font-family: 'JetBrains Mono', monospace;
+          font-size: 15px;
+          letter-spacing: 1.5px;
+          line-height: 1.8;
+          word-break: break-all;
+          margin-bottom: 20px;
+        }
+
+        .expand-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 16px;
+        }
+
+        .expand-close {
+          font-family: 'Cinzel', serif;
+          font-size: 10px;
+          letter-spacing: 2px;
+          text-transform: uppercase;
+          padding: 6px 16px;
+          border: 1.5px solid rgba(255, 255, 255, 0.15);
+          border-radius: 6px;
+          background: none;
+          color: rgba(255, 255, 255, 0.6);
+          cursor: pointer;
+          transition: all 0.3s;
+        }
+        .expand-close:hover {
+          border-color: rgba(255, 255, 255, 0.3);
+          color: rgba(255, 255, 255, 0.9);
         }
 
         .sheet-backdrop {
@@ -345,6 +455,7 @@ export default function RomanCipher() {
           max-width: 620px;
           max-height: 70dvh;
           overflow-y: auto;
+          overflow-x: hidden;
           animation: slideUp 0.3s ease forwards;
           box-shadow: 0 -4px 30px rgba(0, 0, 0, 0.4);
         }
@@ -381,10 +492,10 @@ export default function RomanCipher() {
       <div className="glow-accent" style={{ top: "-250px", left: "-200px", background: "radial-gradient(circle, rgba(212,175,55,0.06) 0%, transparent 70%)" }} />
       <div className="glow-accent" style={{ bottom: "-250px", right: "-200px", background: "radial-gradient(circle, rgba(212,175,55,0.06) 0%, transparent 70%)" }} />
 
-      <div style={{ maxWidth: 720, margin: "0 auto", padding: "32px 20px 0", position: "relative", zIndex: 1, flex: 1, display: "flex", flexDirection: "column" }}>
+      <div style={{ maxWidth: 720, width: "100%", margin: "0 auto", padding: "16px 20px 0", position: "relative", zIndex: 1, flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", minWidth: 0 }}>
 
         {/* Header */}
-        <div className="fade-in" style={{ textAlign: "center", marginBottom: 24 }}>
+        <div className="fade-in" style={{ textAlign: "center", marginBottom: 8 }}>
           <h1 style={{
             fontFamily: "'Cinzel', serif",
             fontSize: "clamp(24px, 5vw, 38px)",
@@ -403,14 +514,14 @@ export default function RomanCipher() {
             WebkitTextFillColor: "transparent",
             backgroundClip: "text",
             lineHeight: 1.2,
-            marginBottom: 10,
+            marginBottom: 6,
           }}>Cipher</h1>
           <div className="hero-line" />
           <p style={{
             fontFamily: "'Cormorant Garamond', 'Georgia', serif",
             fontSize: 20,
             color: "rgba(255, 255, 255, 0.5)",
-            marginTop: 10,
+            marginTop: 6,
             fontStyle: "italic",
             fontWeight: 300,
             lineHeight: 1.5,
@@ -421,7 +532,7 @@ export default function RomanCipher() {
         </div>
 
         {/* Mode Toggle */}
-        <div className="fade-in-d1" style={{ display: "flex", justifyContent: "center", gap: 10, marginBottom: 20 }}>
+        <div className="fade-in-d1" style={{ display: "flex", justifyContent: "center", gap: 10, marginBottom: 8 }}>
           <button
             className={`mode-btn ${mode === "encode" ? "active" : ""}`}
             onClick={() => { setMode("encode"); setInput(""); }}
@@ -441,7 +552,7 @@ export default function RomanCipher() {
             textTransform: "uppercase",
             color: "rgba(255, 255, 255, 0.55)",
             display: "block",
-            marginBottom: 8,
+            marginBottom: 4,
           }}>
             {mode === "encode" ? "Enter text to encode" : "Enter Roman numerals to decode"}
           </label>
@@ -453,19 +564,18 @@ export default function RomanCipher() {
                 ? "Type any word, phrase, or sentence..."
                 : "e.g. VIII.V.XII.XII.XV - XXIII.XV.XVIII.XII.IV"
             }
-            rows={2}
           />
         </div>
 
 
         {/* Output */}
         {output && (
-          <div className="fade-in" style={{ marginBottom: 12 }}>
+          <div className="fade-in" style={{ marginBottom: 8 }}>
             <div style={{
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
-              marginBottom: 8,
+              marginBottom: 4,
             }}>
               <label style={{
                 fontFamily: "'Cinzel', serif",
@@ -480,7 +590,7 @@ export default function RomanCipher() {
                 {copied ? "\u2713 Copied" : "Copy"}
               </button>
             </div>
-            <div className="output-box">
+            <div className="output-box" onClick={() => setExpandedOutput("roman")}>
               {mode === "decode" ? (
                 <span style={{
                   fontFamily: "'Cinzel', serif",
@@ -489,7 +599,28 @@ export default function RomanCipher() {
                   color: "#e8e4df",
                 }}>{output}</span>
               ) : (
-                output
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "4px 12px", alignItems: "flex-start" }}>
+                  {letterBreakdown.map((word, wi) => (
+                    <div key={wi} style={{ display: "flex", alignItems: "flex-start" }}>
+                      {wi > 0 && (
+                        <span style={{ color: "#d4af37", fontSize: 15, fontFamily: "'JetBrains Mono', monospace", marginRight: 12, alignSelf: "flex-start", lineHeight: "1.8" }}>-</span>
+                      )}
+                      <div style={{ display: "flex", alignItems: "flex-start" }}>
+                        {word.map((item, li) => (
+                          <div key={li} style={{ display: "contents" }}>
+                            <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                              <span style={{ color: "#d4af37", fontSize: 15, fontFamily: "'JetBrains Mono', monospace", letterSpacing: 0, lineHeight: "1.8" }}>{item.roman}</span>
+                              <span style={{ fontFamily: "'Cinzel', serif", color: "rgba(255, 255, 255, 0.7)", fontSize: 11 }}>{item.letter}</span>
+                            </div>
+                            {li < word.length - 1 && (
+                              <span style={{ color: "#d4af37", fontSize: 15, fontFamily: "'JetBrains Mono', monospace", lineHeight: "1.8", alignSelf: "flex-start" }}>.</span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
           </div>
@@ -497,12 +628,12 @@ export default function RomanCipher() {
 
         {/* Numeric Cipher */}
         {numericBreakdown && mode === "encode" && (
-          <div className="fade-in" style={{ marginBottom: 16 }}>
+          <div className="fade-in" style={{ marginBottom: 8 }}>
             <div style={{
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
-              marginBottom: 8,
+              marginBottom: 4,
             }}>
               <label style={{
                 fontFamily: "'Cinzel', serif",
@@ -517,7 +648,7 @@ export default function RomanCipher() {
                 {copiedNumeric ? "\u2713 Copied" : "Copy"}
               </button>
             </div>
-            <div className="output-box-secondary">
+            <div className="output-box-secondary" onClick={() => setExpandedOutput("numeric")}>
               {numericBreakdown}
             </div>
           </div>
@@ -527,38 +658,37 @@ export default function RomanCipher() {
         <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div className="fade-in-d3" style={{
             textAlign: "center",
-            padding: "16px",
+            padding: "10px 16px",
             color: "rgba(255, 255, 255, 0.4)",
           }}>
-            <p style={{ fontFamily: "'Cinzel', serif", fontSize: 13, letterSpacing: 2, marginBottom: 10, color: "rgba(255,255,255,0.5)" }}>
+            <p style={{ fontFamily: "'Cinzel', serif", fontSize: 17, letterSpacing: 4, marginBottom: 12, color: "rgba(255,255,255,0.5)" }}>
               FORMAT GUIDE
             </p>
-            <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, lineHeight: 2, letterSpacing: 1, marginBottom: 12 }}>
+            <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 14, lineHeight: 2, letterSpacing: 1, marginBottom: 14 }}>
               Letters separated by <span style={{ color: "#b8960c" }}>.</span> (dot)<br/>
               Words separated by <span style={{ color: "#b8960c" }}> - </span> (dash)
             </p>
-            <div style={{ display: "inline-flex", gap: 16, alignItems: "flex-start" }}>
+            <div className="example-grid">
               {/* LOVE */}
-              <div style={{ display: "flex", gap: 4, alignItems: "flex-start" }}>
+              <div style={{ display: "flex", gap: "clamp(4px, 1vw, 8px)", alignItems: "flex-start" }}>
                 {[
                   { letter: "L", roman: "XII" },
                   { letter: "O", roman: "XV" },
                   { letter: "V", roman: "XXII" },
                   { letter: "E", roman: "V" },
                 ].map((item, i) => (
-                  <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", minWidth: 28 }}>
-                    <span style={{ color: "#b8960c", fontSize: 11 }}>{item.roman}</span>
-                    {i < 3 && <span style={{ color: "rgba(255,255,255,0.25)", fontSize: 9, position: "absolute", marginTop: 1, marginLeft: 32 }}>.</span>}
-                    <span style={{ color: "rgba(255, 255, 255, 0.55)", fontSize: 10, marginTop: 2 }}>{item.letter}</span>
+                  <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", minWidth: "clamp(30px, 6vw, 44px)" }}>
+                    <span className="example-roman">{item.roman}</span>
+                    <span className="example-letter">{item.letter}</span>
                   </div>
                 ))}
               </div>
               {/* Dash separator */}
               <div style={{ display: "flex", alignItems: "flex-start", paddingTop: 2 }}>
-                <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 11 }}>-</span>
+                <span className="example-dash">-</span>
               </div>
               {/* STAMP */}
-              <div style={{ display: "flex", gap: 4, alignItems: "flex-start" }}>
+              <div style={{ display: "flex", gap: "clamp(4px, 1vw, 8px)", alignItems: "flex-start" }}>
                 {[
                   { letter: "S", roman: "XIX" },
                   { letter: "T", roman: "XX" },
@@ -566,17 +696,17 @@ export default function RomanCipher() {
                   { letter: "M", roman: "XIII" },
                   { letter: "P", roman: "XVI" },
                 ].map((item, i) => (
-                  <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", minWidth: 28 }}>
-                    <span style={{ color: "#b8960c", fontSize: 11 }}>{item.roman}</span>
-                    <span style={{ color: "rgba(255, 255, 255, 0.55)", fontSize: 10, marginTop: 2 }}>{item.letter}</span>
+                  <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", minWidth: "clamp(30px, 6vw, 44px)" }}>
+                    <span className="example-roman">{item.roman}</span>
+                    <span className="example-letter">{item.letter}</span>
                   </div>
                 ))}
               </div>
             </div>
           </div>
         </div>
-        <div style={{ textAlign: "center", paddingBottom: 20 }}>
-          <div className="hero-line" style={{ marginBottom: 16 }} />
+        <div style={{ textAlign: "center", paddingBottom: 10 }}>
+          <div className="hero-line" style={{ marginBottom: 8 }} />
           <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 16 }}>
             <button className="ref-toggle" onClick={() => setShowRef(true)}>
               Reference Table
@@ -584,6 +714,79 @@ export default function RomanCipher() {
           </div>
         </div>
       </div>
+
+      {/* Expanded Output Widget */}
+      {expandedOutput && (
+        <div className="expand-backdrop" onClick={() => setExpandedOutput(null)}>
+          <div className="expand-modal" onClick={e => e.stopPropagation()}>
+            <div className="expand-header">
+              <label style={{
+                fontFamily: "'Cinzel', serif",
+                fontSize: 11,
+                letterSpacing: 3,
+                textTransform: "uppercase",
+                color: "rgba(255, 255, 255, 0.55)",
+              }}>
+                {expandedOutput === "roman"
+                  ? (mode === "encode" ? "Roman Numeral Cipher" : "Decoded Text")
+                  : "Numeric Cipher"}
+              </label>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button
+                  className={`copy-btn ${
+                    expandedOutput === "roman" ? (copied ? "copied" : "") : (copiedNumeric ? "copied" : "")
+                  }`}
+                  onClick={expandedOutput === "roman" ? handleCopy : handleCopyNumeric}
+                >
+                  {expandedOutput === "roman"
+                    ? (copied ? "\u2713 Copied" : "Copy")
+                    : (copiedNumeric ? "\u2713 Copied" : "Copy")}
+                </button>
+                <button className="expand-close" onClick={() => setExpandedOutput(null)}>Close</button>
+              </div>
+            </div>
+            <div className="expand-content" style={{
+              color: expandedOutput === "roman" ? "#d4af37" : "rgba(255, 255, 255, 0.7)",
+            }}>
+              {expandedOutput === "roman" ? (
+                mode === "decode" ? (
+                  <span style={{
+                    fontFamily: "'Cinzel', serif",
+                    fontSize: 20,
+                    letterSpacing: 4,
+                    color: "#e8e4df",
+                  }}>{output}</span>
+                ) : (
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "4px 12px", alignItems: "flex-start" }}>
+                    {letterBreakdown.map((word, wi) => (
+                      <div key={wi} style={{ display: "flex", alignItems: "flex-start" }}>
+                        {wi > 0 && (
+                          <span style={{ color: "#d4af37", fontSize: 15, fontFamily: "'JetBrains Mono', monospace", marginRight: 12, alignSelf: "flex-start", lineHeight: "1.8" }}>-</span>
+                        )}
+                        <div style={{ display: "flex", alignItems: "flex-start" }}>
+                          {word.map((item, li) => (
+                            <div key={li} style={{ display: "contents" }}>
+                              <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                                <span style={{ color: "#d4af37", fontSize: 15, fontFamily: "'JetBrains Mono', monospace", letterSpacing: 0, lineHeight: "1.8" }}>{item.roman}</span>
+                                <span style={{ fontFamily: "'Cinzel', serif", color: "rgba(255, 255, 255, 0.7)", fontSize: 11 }}>{item.letter}</span>
+                              </div>
+                              {li < word.length - 1 && (
+                                <span style={{ color: "#d4af37", fontSize: 15, fontFamily: "'JetBrains Mono', monospace", lineHeight: "1.8", alignSelf: "flex-start" }}>.</span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )
+              ) : (
+                numericBreakdown
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Reference Table Bottom Sheet */}
       {showRef && (

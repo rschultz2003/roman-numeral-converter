@@ -98,6 +98,7 @@ export default function RomanCipher() {
   const [input, setInput] = useState("");
   const [mode, setMode] = useState("encode");
   const [copied, setCopied] = useState(false);
+  const [copiedNumeric, setCopiedNumeric] = useState(false);
   const [showRef, setShowRef] = useState(false);
 
   const output = useMemo(() => {
@@ -119,6 +120,15 @@ export default function RomanCipher() {
       setTimeout(() => setCopied(false), 2000);
     }
   }, [output]);
+
+  const handleCopyNumeric = useCallback(async () => {
+    if (!numericBreakdown) return;
+    const success = await copyToClipboard(numericBreakdown);
+    if (success !== false) {
+      setCopiedNumeric(true);
+      setTimeout(() => setCopiedNumeric(false), 2000);
+    }
+  }, [numericBreakdown]);
 
   const exampleWords = [
     { label: "HELLO", value: "hello" },
@@ -327,12 +337,18 @@ export default function RomanCipher() {
           font-weight: 500;
         }
 
-        .breakdown {
+        .output-box-secondary {
+          background: #FFFFFF;
+          border: 1.5px solid rgba(0, 0, 0, 0.08);
+          border-radius: 10px;
+          padding: 16px;
+          min-height: 40px;
           font-family: 'JetBrains Mono', monospace;
-          font-size: 12px;
-          color: rgba(0, 0, 0, 0.45);
-          letter-spacing: 1px;
-          padding: 8px 0;
+          font-size: 15px;
+          letter-spacing: 1.5px;
+          line-height: 1.8;
+          color: rgba(0, 0, 0, 0.55);
+          word-break: break-all;
         }
 
         .sheet-backdrop {
@@ -493,17 +509,9 @@ export default function RomanCipher() {
           </div>
         )}
 
-        {/* Numeric Breakdown */}
-        {numericBreakdown && mode === "encode" && (
-          <div className="breakdown fade-in" style={{ marginBottom: 4 }}>
-            <span style={{ color: "rgba(0, 0, 0, 0.35)", marginRight: 8 }}>NUMERIC:</span>
-            {numericBreakdown}
-          </div>
-        )}
-
         {/* Output */}
         {output && (
-          <div className="fade-in" style={{ marginBottom: 16 }}>
+          <div className="fade-in" style={{ marginBottom: 12 }}>
             <div style={{
               display: "flex",
               justifyContent: "space-between",
@@ -534,6 +542,34 @@ export default function RomanCipher() {
               ) : (
                 output
               )}
+            </div>
+          </div>
+        )}
+
+        {/* Numeric Cipher */}
+        {numericBreakdown && mode === "encode" && (
+          <div className="fade-in" style={{ marginBottom: 16 }}>
+            <div style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: 8,
+            }}>
+              <label style={{
+                fontFamily: "'Cinzel', serif",
+                fontSize: 10,
+                letterSpacing: 3,
+                textTransform: "uppercase",
+                color: "rgba(0, 0, 0, 0.45)",
+              }}>
+                Numeric Cipher
+              </label>
+              <button className={`copy-btn ${copiedNumeric ? "copied" : ""}`} onClick={handleCopyNumeric}>
+                {copiedNumeric ? "\u2713 Copied" : "Copy"}
+              </button>
+            </div>
+            <div className="output-box-secondary">
+              {numericBreakdown}
             </div>
           </div>
         )}

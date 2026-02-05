@@ -511,7 +511,7 @@ export default function RomanCipher() {
               Letters separated by <span style={{ color: "#b8960c" }}>.</span> (dot)<br/>
               Words separated by <span style={{ color: "#b8960c" }}> - </span> (dash)<br/>
               <span style={{ color: "rgba(42, 37, 32, 0.3)", marginTop: 8, display: "inline-block" }}>
-                {'"ONE" \u2192 XV.XIV.V'}
+{'"LOVE STAMP" \u2192 XII.XV.XXII.V - XIX.XX.I.XIII.XVI'}
               </span>
             </p>
           </div>

@@ -130,20 +130,14 @@ export default function RomanCipher() {
     }
   }, [numericBreakdown]);
 
-  const exampleWords = [
-    { label: "HELLO", value: "hello" },
-    { label: "ROME", value: "rome" },
-    { label: "CARPE DIEM", value: "carpe diem" },
-    { label: "VENI VIDI VICI", value: "veni vidi vici" },
-  ];
 
   return (
     <div style={{
       minHeight: "100dvh",
       display: "flex",
       flexDirection: "column",
-      background: "#FAFAF8",
-      color: "#2a2520",
+      background: "#0a0a08",
+      color: "#e8e4df",
       fontFamily: "'Cormorant Garamond', 'Georgia', serif",
       position: "relative",
       overflow: "hidden",
@@ -153,7 +147,7 @@ export default function RomanCipher() {
 
         .grain {
           position: fixed; inset: 0; pointer-events: none; z-index: 100;
-          opacity: 0.018;
+          opacity: 0.03;
           background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
         }
 
@@ -176,10 +170,10 @@ export default function RomanCipher() {
         textarea {
           font-family: 'JetBrains Mono', monospace;
           font-size: 16px;
-          background: #FFFFFF;
+          background: rgba(255, 255, 255, 0.05);
           border: 1.5px solid rgba(184, 150, 12, 0.2);
           border-radius: 10px;
-          color: #2a2520;
+          color: #e8e4df;
           padding: 14px 16px;
           width: 100%;
           resize: none;
@@ -189,10 +183,10 @@ export default function RomanCipher() {
         }
         textarea:focus {
           border-color: rgba(212, 175, 55, 0.5);
-          box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.08), 0 4px 20px rgba(212, 175, 55, 0.06);
+          box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1), 0 4px 20px rgba(212, 175, 55, 0.08);
         }
         textarea::placeholder {
-          color: rgba(0, 0, 0, 0.32);
+          color: rgba(255, 255, 255, 0.35);
           font-style: italic;
         }
 
@@ -204,15 +198,15 @@ export default function RomanCipher() {
           padding: 10px 24px;
           border: 1.5px solid rgba(184, 150, 12, 0.2);
           border-radius: 6px;
-          background: #FFFFFF;
-          color: rgba(0, 0, 0, 0.45);
+          background: rgba(255, 255, 255, 0.05);
+          color: rgba(255, 255, 255, 0.6);
           cursor: pointer;
           transition: all 0.35s ease;
         }
         .mode-btn:hover {
           border-color: rgba(212, 175, 55, 0.45);
-          color: rgba(0, 0, 0, 0.7);
-          box-shadow: 0 2px 12px rgba(212, 175, 55, 0.08);
+          color: rgba(255, 255, 255, 0.85);
+          box-shadow: 0 2px 12px rgba(212, 175, 55, 0.12);
         }
         .mode-btn.active {
           background: linear-gradient(135deg, #d4af37 0%, #c5a028 50%, #b8960c 100%);
@@ -222,28 +216,9 @@ export default function RomanCipher() {
           text-shadow: 0 1px 2px rgba(0,0,0,0.1);
         }
 
-        .example-chip {
-          font-family: 'Cinzel', serif;
-          font-size: 10px;
-          letter-spacing: 2px;
-          padding: 6px 14px;
-          border: 1px solid rgba(184, 150, 12, 0.15);
-          border-radius: 20px;
-          background: #FFFFFF;
-          color: rgba(0, 0, 0, 0.5);
-          cursor: pointer;
-          transition: all 0.3s;
-          text-transform: uppercase;
-        }
-        .example-chip:hover {
-          border-color: rgba(212, 175, 55, 0.4);
-          color: #b8960c;
-          background: rgba(212, 175, 55, 0.04);
-          box-shadow: 0 2px 8px rgba(212, 175, 55, 0.08);
-        }
 
         .output-box {
-          background: #FFFFFF;
+          background: rgba(255, 255, 255, 0.05);
           border: 1.5px solid rgba(184, 150, 12, 0.2);
           border-radius: 10px;
           padding: 16px;
@@ -252,10 +227,10 @@ export default function RomanCipher() {
           font-size: 15px;
           letter-spacing: 1.5px;
           line-height: 1.8;
-          color: #9a7b0a;
+          color: #d4af37;
           word-break: break-all;
           position: relative;
-          box-shadow: 0 2px 16px rgba(212, 175, 55, 0.05);
+          box-shadow: 0 2px 16px rgba(212, 175, 55, 0.06);
         }
 
         .copy-btn {
@@ -266,8 +241,8 @@ export default function RomanCipher() {
           padding: 6px 16px;
           border: 1.5px solid rgba(184, 150, 12, 0.25);
           border-radius: 6px;
-          background: #FFFFFF;
-          color: #b8960c;
+          background: rgba(255, 255, 255, 0.05);
+          color: #d4af37;
           cursor: pointer;
           transition: all 0.3s;
         }
@@ -291,19 +266,19 @@ export default function RomanCipher() {
           background: none;
           border: 1px solid rgba(184, 150, 12, 0.2);
           border-radius: 6px;
-          color: rgba(0, 0, 0, 0.4);
+          color: rgba(255, 255, 255, 0.5);
           cursor: pointer;
           padding: 8px 20px;
           transition: all 0.3s;
         }
         .ref-toggle:hover {
-          color: rgba(0, 0, 0, 0.7);
+          color: rgba(255, 255, 255, 0.8);
           border-color: rgba(212, 175, 55, 0.4);
         }
 
         .ref-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+          grid-template-columns: repeat(13, 1fr);
           gap: 5px;
         }
 
@@ -312,32 +287,32 @@ export default function RomanCipher() {
           flex-direction: column;
           align-items: center;
           padding: 8px 4px;
-          border: 1px solid rgba(184, 150, 12, 0.1);
+          border: 1px solid rgba(184, 150, 12, 0.12);
           border-radius: 8px;
-          background: #FFFFFF;
+          background: rgba(255, 255, 255, 0.04);
           gap: 2px;
         }
         .ref-letter {
           font-family: 'Cinzel', serif;
           font-size: 15px;
           font-weight: 600;
-          color: #b8960c;
+          color: #d4af37;
         }
         .ref-num {
           font-family: 'JetBrains Mono', monospace;
           font-size: 9px;
-          color: rgba(0, 0, 0, 0.38);
+          color: rgba(255, 255, 255, 0.45);
         }
         .ref-roman {
           font-family: 'JetBrains Mono', monospace;
           font-size: 11px;
-          color: rgba(0, 0, 0, 0.6);
+          color: rgba(255, 255, 255, 0.7);
           font-weight: 500;
         }
 
         .output-box-secondary {
-          background: #FFFFFF;
-          border: 1.5px solid rgba(0, 0, 0, 0.08);
+          background: rgba(255, 255, 255, 0.04);
+          border: 1.5px solid rgba(184, 150, 12, 0.12);
           border-radius: 10px;
           padding: 16px;
           min-height: 40px;
@@ -345,7 +320,7 @@ export default function RomanCipher() {
           font-size: 15px;
           letter-spacing: 1.5px;
           line-height: 1.8;
-          color: rgba(0, 0, 0, 0.55);
+          color: rgba(255, 255, 255, 0.7);
           word-break: break-all;
         }
 
@@ -360,22 +335,24 @@ export default function RomanCipher() {
         .sheet {
           position: fixed;
           bottom: 0;
-          left: 0;
-          right: 0;
+          left: 50%;
+          transform: translateX(-50%);
           z-index: 201;
-          background: #FAFAF8;
+          background: #141410;
           border-radius: 20px 20px 0 0;
-          padding: 20px 16px calc(20px + env(safe-area-inset-bottom));
+          padding: 20px 24px calc(20px + env(safe-area-inset-bottom));
+          width: 100%;
+          max-width: 620px;
           max-height: 70dvh;
           overflow-y: auto;
           animation: slideUp 0.3s ease forwards;
-          box-shadow: 0 -4px 30px rgba(0, 0, 0, 0.1);
+          box-shadow: 0 -4px 30px rgba(0, 0, 0, 0.4);
         }
 
         .sheet-handle {
           width: 36px;
           height: 4px;
-          background: rgba(0, 0, 0, 0.15);
+          background: rgba(255, 255, 255, 0.2);
           border-radius: 2px;
           margin: 0 auto 16px;
         }
@@ -386,8 +363,8 @@ export default function RomanCipher() {
         }
 
         @keyframes slideUp {
-          from { transform: translateY(100%); }
-          to { transform: translateY(0); }
+          from { transform: translateX(-50%) translateY(100%); }
+          to { transform: translateX(-50%) translateY(0); }
         }
 
         @keyframes fadeIn {
@@ -401,27 +378,19 @@ export default function RomanCipher() {
       `}</style>
 
       <div className="grain" />
-      <div className="glow-accent" style={{ top: "-250px", left: "-200px", background: "radial-gradient(circle, rgba(212,175,55,0.04) 0%, transparent 70%)" }} />
-      <div className="glow-accent" style={{ bottom: "-250px", right: "-200px", background: "radial-gradient(circle, rgba(212,175,55,0.04) 0%, transparent 70%)" }} />
+      <div className="glow-accent" style={{ top: "-250px", left: "-200px", background: "radial-gradient(circle, rgba(212,175,55,0.06) 0%, transparent 70%)" }} />
+      <div className="glow-accent" style={{ bottom: "-250px", right: "-200px", background: "radial-gradient(circle, rgba(212,175,55,0.06) 0%, transparent 70%)" }} />
 
       <div style={{ maxWidth: 720, margin: "0 auto", padding: "32px 20px 0", position: "relative", zIndex: 1, flex: 1, display: "flex", flexDirection: "column" }}>
 
         {/* Header */}
         <div className="fade-in" style={{ textAlign: "center", marginBottom: 24 }}>
-          <p style={{
-            fontFamily: "'Cinzel', serif",
-            fontSize: 9,
-            letterSpacing: 8,
-            textTransform: "uppercase",
-            color: "rgba(0, 0, 0, 0.3)",
-            marginBottom: 10,
-          }}>Numeris Romanis</p>
           <h1 style={{
             fontFamily: "'Cinzel', serif",
             fontSize: "clamp(24px, 5vw, 38px)",
             fontWeight: 400,
             letterSpacing: 4,
-            color: "#2a2520",
+            color: "#e8e4df",
             lineHeight: 1.2,
           }}>Roman Numeral</h1>
           <h1 style={{
@@ -438,12 +407,14 @@ export default function RomanCipher() {
           }}>Cipher</h1>
           <div className="hero-line" />
           <p style={{
-            fontSize: 14,
-            color: "rgba(0, 0, 0, 0.45)",
+            fontFamily: "'Cormorant Garamond', 'Georgia', serif",
+            fontSize: 20,
+            color: "rgba(255, 255, 255, 0.5)",
             marginTop: 10,
             fontStyle: "italic",
             fontWeight: 300,
             lineHeight: 1.5,
+            letterSpacing: 1,
           }}>
             Transform words into ancient numerals
           </p>
@@ -468,7 +439,7 @@ export default function RomanCipher() {
             fontSize: 10,
             letterSpacing: 3,
             textTransform: "uppercase",
-            color: "rgba(0, 0, 0, 0.45)",
+            color: "rgba(255, 255, 255, 0.55)",
             display: "block",
             marginBottom: 8,
           }}>
@@ -486,26 +457,6 @@ export default function RomanCipher() {
           />
         </div>
 
-        {/* Example Chips */}
-        {mode === "encode" && (
-          <div className="fade-in-d2" style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 16 }}>
-            <span style={{
-              fontFamily: "'Cinzel', serif",
-              fontSize: 9,
-              letterSpacing: 2,
-              color: "rgba(0, 0, 0, 0.3)",
-              alignSelf: "center",
-              marginRight: 2,
-            }}>TRY:</span>
-            {exampleWords.map(ex => (
-              <button
-                key={ex.label}
-                className="example-chip"
-                onClick={() => setInput(ex.value)}
-              >{ex.label}</button>
-            ))}
-          </div>
-        )}
 
         {/* Output */}
         {output && (
@@ -521,7 +472,7 @@ export default function RomanCipher() {
                 fontSize: 10,
                 letterSpacing: 3,
                 textTransform: "uppercase",
-                color: "rgba(0, 0, 0, 0.45)",
+                color: "rgba(255, 255, 255, 0.55)",
               }}>
                 {mode === "encode" ? "Roman Numeral Cipher" : "Decoded Text"}
               </label>
@@ -535,7 +486,7 @@ export default function RomanCipher() {
                   fontFamily: "'Cinzel', serif",
                   fontSize: 20,
                   letterSpacing: 4,
-                  color: "#2a2520",
+                  color: "#e8e4df",
                 }}>{output}</span>
               ) : (
                 output
@@ -558,7 +509,7 @@ export default function RomanCipher() {
                 fontSize: 10,
                 letterSpacing: 3,
                 textTransform: "uppercase",
-                color: "rgba(0, 0, 0, 0.45)",
+                color: "rgba(255, 255, 255, 0.55)",
               }}>
                 Numeric Cipher
               </label>
@@ -572,43 +523,64 @@ export default function RomanCipher() {
           </div>
         )}
 
-        {/* Format Guide */}
-        {!output && (
+        {/* Spacer + Format Guide (centered between content and footer) */}
+        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div className="fade-in-d3" style={{
             textAlign: "center",
-            padding: "20px 16px",
-            color: "rgba(0, 0, 0, 0.4)",
+            padding: "16px",
+            color: "rgba(255, 255, 255, 0.4)",
           }}>
-            <p style={{ fontFamily: "'Cinzel', serif", fontSize: 13, letterSpacing: 2, marginBottom: 8, color: "rgba(0,0,0,0.5)" }}>
+            <p style={{ fontFamily: "'Cinzel', serif", fontSize: 13, letterSpacing: 2, marginBottom: 10, color: "rgba(255,255,255,0.5)" }}>
               FORMAT GUIDE
             </p>
-            <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, lineHeight: 2, letterSpacing: 1 }}>
+            <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, lineHeight: 2, letterSpacing: 1, marginBottom: 12 }}>
               Letters separated by <span style={{ color: "#b8960c" }}>.</span> (dot)<br/>
-              Words separated by <span style={{ color: "#b8960c" }}> - </span> (dash)<br/>
-              <span style={{ color: "rgba(0, 0, 0, 0.45)", marginTop: 4, display: "inline-block" }}>
-{'"LOVE STAMP" \u2192 XII.XV.XXII.V - XIX.XX.I.XIII.XVI'}
-              </span>
+              Words separated by <span style={{ color: "#b8960c" }}> - </span> (dash)
             </p>
+            <div style={{ display: "inline-flex", gap: 16, alignItems: "flex-start" }}>
+              {/* LOVE */}
+              <div style={{ display: "flex", gap: 4, alignItems: "flex-start" }}>
+                {[
+                  { letter: "L", roman: "XII" },
+                  { letter: "O", roman: "XV" },
+                  { letter: "V", roman: "XXII" },
+                  { letter: "E", roman: "V" },
+                ].map((item, i) => (
+                  <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", minWidth: 28 }}>
+                    <span style={{ color: "#b8960c", fontSize: 11 }}>{item.roman}</span>
+                    {i < 3 && <span style={{ color: "rgba(255,255,255,0.25)", fontSize: 9, position: "absolute", marginTop: 1, marginLeft: 32 }}>.</span>}
+                    <span style={{ color: "rgba(255, 255, 255, 0.55)", fontSize: 10, marginTop: 2 }}>{item.letter}</span>
+                  </div>
+                ))}
+              </div>
+              {/* Dash separator */}
+              <div style={{ display: "flex", alignItems: "flex-start", paddingTop: 2 }}>
+                <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 11 }}>-</span>
+              </div>
+              {/* STAMP */}
+              <div style={{ display: "flex", gap: 4, alignItems: "flex-start" }}>
+                {[
+                  { letter: "S", roman: "XIX" },
+                  { letter: "T", roman: "XX" },
+                  { letter: "A", roman: "I" },
+                  { letter: "M", roman: "XIII" },
+                  { letter: "P", roman: "XVI" },
+                ].map((item, i) => (
+                  <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", minWidth: 28 }}>
+                    <span style={{ color: "#b8960c", fontSize: 11 }}>{item.roman}</span>
+                    <span style={{ color: "rgba(255, 255, 255, 0.55)", fontSize: 10, marginTop: 2 }}>{item.letter}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
-        )}
-
-        {/* Spacer + Footer */}
-        <div style={{ flex: 1 }} />
+        </div>
         <div style={{ textAlign: "center", paddingBottom: 20 }}>
           <div className="hero-line" style={{ marginBottom: 16 }} />
           <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 16 }}>
             <button className="ref-toggle" onClick={() => setShowRef(true)}>
               Reference Table
             </button>
-          </div>
-          <div style={{
-            marginTop: 16,
-            color: "rgba(0, 0, 0, 0.18)",
-            fontFamily: "'Cinzel', serif",
-            fontSize: 9,
-            letterSpacing: 4,
-          }}>
-            LETTERIS &middot; IN &middot; NUMERIS &middot; ROMANIS
           </div>
         </div>
       </div>
@@ -624,7 +596,7 @@ export default function RomanCipher() {
               fontSize: 12,
               letterSpacing: 3,
               textTransform: "uppercase",
-              color: "rgba(0, 0, 0, 0.5)",
+              color: "rgba(255, 255, 255, 0.55)",
               textAlign: "center",
               marginBottom: 16,
             }}>Reference Table</p>

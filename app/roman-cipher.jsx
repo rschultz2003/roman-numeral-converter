@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useRef } from "react";
 
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
@@ -111,6 +111,10 @@ export default function RomanCipher() {
   const [copiedNumeric, setCopiedNumeric] = useState(false);
   const [showRef, setShowRef] = useState(false);
   const [expandedOutput, setExpandedOutput] = useState(null); // "roman" | "numeric" | null
+  const [isScanning, setIsScanning] = useState(false);
+  const [scanError, setScanError] = useState(null);
+  const fileInputRef = useRef(null);
+  const cameraInputRef = useRef(null);
 
   const output = useMemo(() => {
     if (!input.trim()) return "";
@@ -145,6 +149,42 @@ export default function RomanCipher() {
       setTimeout(() => setCopiedNumeric(false), 2000);
     }
   }, [numericBreakdown]);
+
+  const processImage = useCallback(async (file) => {
+    setIsScanning(true);
+    setScanError(null);
+    try {
+      const { createWorker } = await import('tesseract.js');
+      const worker = await createWorker('eng');
+      const { data: { text } } = await worker.recognize(file);
+      await worker.terminate();
+
+      // Clean up the OCR text - normalize whitespace and remove extra characters
+      const cleanedText = text
+        .replace(/\n/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+      if (cleanedText) {
+        setInput(cleanedText);
+      } else {
+        setScanError("No text detected in image");
+      }
+    } catch (err) {
+      console.error('OCR Error:', err);
+      setScanError("Could not read text from image");
+    } finally {
+      setIsScanning(false);
+    }
+  }, []);
+
+  const handleFileSelect = useCallback((e) => {
+    const file = e.target.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      processImage(file);
+    }
+    e.target.value = ''; // Reset for same file re-upload
+  }, [processImage]);
 
 
   return (
@@ -485,6 +525,66 @@ export default function RomanCipher() {
           to { opacity: 1; }
         }
 
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+
+        .scan-btn {
+          font-family: 'Cinzel', serif;
+          font-size: 10px;
+          letter-spacing: 2px;
+          text-transform: uppercase;
+          padding: 8px 14px;
+          border: 1.5px solid rgba(184, 150, 12, 0.25);
+          border-radius: 6px;
+          background: rgba(255, 255, 255, 0.05);
+          color: rgba(255, 255, 255, 0.6);
+          cursor: pointer;
+          transition: all 0.3s;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+        }
+        .scan-btn:hover {
+          border-color: rgba(212, 175, 55, 0.45);
+          color: rgba(255, 255, 255, 0.85);
+          background: rgba(255, 255, 255, 0.08);
+        }
+        .scan-btn:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+        .scan-btn svg {
+          width: 14px;
+          height: 14px;
+        }
+
+        .spinner {
+          width: 14px;
+          height: 14px;
+          border: 2px solid rgba(212, 175, 55, 0.3);
+          border-top-color: #d4af37;
+          border-radius: 50%;
+          animation: spin 0.8s linear infinite;
+        }
+
+        .scan-error {
+          color: #e57373;
+          font-size: 11px;
+          margin-top: 6px;
+          font-family: 'JetBrains Mono', monospace;
+        }
+
+        .mobile-only {
+          display: none;
+        }
+        @media (max-width: 600px) {
+          .mobile-only {
+            display: inline-flex;
+          }
+        }
+
         @keyframes slideUp {
           from { transform: translateX(-50%) translateY(100%); }
           to { transform: translateX(-50%) translateY(0); }
@@ -547,11 +647,11 @@ export default function RomanCipher() {
         <div className="fade-in-d1" style={{ display: "flex", justifyContent: "center", gap: 10, marginBottom: 8 }}>
           <button
             className={`mode-btn ${mode === "encode" ? "active" : ""}`}
-            onClick={() => { setMode("encode"); setInput(""); }}
+            onClick={() => { setMode("encode"); setInput(""); setScanError(null); }}
           >Encode</button>
           <button
             className={`mode-btn ${mode === "decode" ? "active" : ""}`}
-            onClick={() => { setMode("decode"); setInput(""); }}
+            onClick={() => { setMode("decode"); setInput(""); setScanError(null); }}
           >Decode</button>
         </div>
 
@@ -568,9 +668,66 @@ export default function RomanCipher() {
           }}>
             {mode === "encode" ? "Enter text to encode" : "Enter Roman numerals to decode"}
           </label>
+
+          {/* Scanner buttons - Decode mode only */}
+          {mode === "decode" && (
+            <div style={{ display: "flex", gap: 8, marginBottom: 8, flexWrap: "wrap" }}>
+              <button
+                className="scan-btn"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isScanning}
+              >
+                {isScanning ? (
+                  <span className="spinner" />
+                ) : (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" />
+                  </svg>
+                )}
+                {isScanning ? "Scanning..." : "Upload Image"}
+              </button>
+              <button
+                className="scan-btn mobile-only"
+                onClick={() => cameraInputRef.current?.click()}
+                disabled={isScanning}
+              >
+                {isScanning ? (
+                  <span className="spinner" />
+                ) : (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
+                    <circle cx="12" cy="13" r="4" />
+                  </svg>
+                )}
+                Scan Camera
+              </button>
+              {/* Hidden file inputs */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileSelect}
+                style={{ display: "none" }}
+              />
+              <input
+                ref={cameraInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={handleFileSelect}
+                style={{ display: "none" }}
+              />
+            </div>
+          )}
+
+          {/* Scan error message */}
+          {scanError && mode === "decode" && (
+            <p className="scan-error">{scanError}</p>
+          )}
+
           <textarea
             value={input}
-            onChange={e => setInput(e.target.value)}
+            onChange={e => { setInput(e.target.value); setScanError(null); }}
             placeholder={
               mode === "encode"
                 ? "Type any word, phrase, or sentence..."
@@ -611,25 +768,29 @@ export default function RomanCipher() {
                   color: "#e8e4df",
                 }}>{output}</span>
               ) : (
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "4px 12px", alignItems: "flex-start" }}>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "4px 0", alignItems: "flex-start" }}>
                   {letterBreakdown.map((word, wi) => (
                     <div key={wi} style={{ display: "flex", alignItems: "flex-start" }}>
                       {wi > 0 && (
-                        <span style={{ color: "#d4af37", fontSize: 15, fontFamily: "'JetBrains Mono', monospace", marginRight: 12, alignSelf: "flex-start", lineHeight: "1.8" }}>-</span>
+                        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", margin: "0 6px" }}>
+                          <span style={{ color: "#d4af37", fontSize: 15, fontFamily: "'JetBrains Mono', monospace", lineHeight: "1.8" }}>-</span>
+                          <span style={{ fontSize: 11, visibility: "hidden" }}>-</span>
+                        </div>
                       )}
-                      <div style={{ display: "flex", alignItems: "flex-start" }}>
-                        {word.map((item, li) => (
-                          <div key={li} style={{ display: "contents" }}>
-                            <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                              <span style={{ color: "#d4af37", fontSize: 15, fontFamily: "'JetBrains Mono', monospace", letterSpacing: 0, lineHeight: "1.8" }}>{item.roman}</span>
-                              <span style={{ fontFamily: "'Cinzel', serif", color: "rgba(255, 255, 255, 0.7)", fontSize: 11 }}>{item.letter}</span>
-                            </div>
-                            {li < word.length - 1 && (
-                              <span style={{ color: "#d4af37", fontSize: 15, fontFamily: "'JetBrains Mono', monospace", lineHeight: "1.8", alignSelf: "flex-start" }}>.</span>
-                            )}
+                      {word.map((item, li) => (
+                        <div key={li} style={{ display: "flex", alignItems: "flex-start" }}>
+                          <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                            <span style={{ color: "#d4af37", fontSize: 15, fontFamily: "'JetBrains Mono', monospace", letterSpacing: 0, lineHeight: "1.8" }}>{item.roman}</span>
+                            <span style={{ fontFamily: "'Cinzel', serif", color: "rgba(255, 255, 255, 0.7)", fontSize: 11 }}>{item.letter}</span>
                           </div>
-                        ))}
-                      </div>
+                          {li < word.length - 1 && (
+                            <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                              <span style={{ color: "#d4af37", fontSize: 15, fontFamily: "'JetBrains Mono', monospace", lineHeight: "1.8" }}>.</span>
+                              <span style={{ fontSize: 11, visibility: "hidden" }}>.</span>
+                            </div>
+                          )}
+                        </div>
+                      ))}
                     </div>
                   ))}
                 </div>
@@ -769,25 +930,29 @@ export default function RomanCipher() {
                     color: "#e8e4df",
                   }}>{output}</span>
                 ) : (
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: "4px 12px", alignItems: "flex-start" }}>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "4px 0", alignItems: "flex-start" }}>
                     {letterBreakdown.map((word, wi) => (
                       <div key={wi} style={{ display: "flex", alignItems: "flex-start" }}>
                         {wi > 0 && (
-                          <span style={{ color: "#d4af37", fontSize: 15, fontFamily: "'JetBrains Mono', monospace", marginRight: 12, alignSelf: "flex-start", lineHeight: "1.8" }}>-</span>
+                          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", margin: "0 6px" }}>
+                            <span style={{ color: "#d4af37", fontSize: 15, fontFamily: "'JetBrains Mono', monospace", lineHeight: "1.8" }}>-</span>
+                            <span style={{ fontSize: 11, visibility: "hidden" }}>-</span>
+                          </div>
                         )}
-                        <div style={{ display: "flex", alignItems: "flex-start" }}>
-                          {word.map((item, li) => (
-                            <div key={li} style={{ display: "contents" }}>
-                              <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                                <span style={{ color: "#d4af37", fontSize: 15, fontFamily: "'JetBrains Mono', monospace", letterSpacing: 0, lineHeight: "1.8" }}>{item.roman}</span>
-                                <span style={{ fontFamily: "'Cinzel', serif", color: "rgba(255, 255, 255, 0.7)", fontSize: 11 }}>{item.letter}</span>
-                              </div>
-                              {li < word.length - 1 && (
-                                <span style={{ color: "#d4af37", fontSize: 15, fontFamily: "'JetBrains Mono', monospace", lineHeight: "1.8", alignSelf: "flex-start" }}>.</span>
-                              )}
+                        {word.map((item, li) => (
+                          <div key={li} style={{ display: "flex", alignItems: "flex-start" }}>
+                            <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                              <span style={{ color: "#d4af37", fontSize: 15, fontFamily: "'JetBrains Mono', monospace", letterSpacing: 0, lineHeight: "1.8" }}>{item.roman}</span>
+                              <span style={{ fontFamily: "'Cinzel', serif", color: "rgba(255, 255, 255, 0.7)", fontSize: 11 }}>{item.letter}</span>
                             </div>
-                          ))}
-                        </div>
+                            {li < word.length - 1 && (
+                              <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                                <span style={{ color: "#d4af37", fontSize: 15, fontFamily: "'JetBrains Mono', monospace", lineHeight: "1.8" }}>.</span>
+                                <span style={{ fontSize: 11, visibility: "hidden" }}>.</span>
+                              </div>
+                            )}
+                          </div>
+                        ))}
                       </div>
                     ))}
                   </div>

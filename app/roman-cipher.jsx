@@ -111,7 +111,7 @@ export default function RomanCipher() {
   const [copiedNumeric, setCopiedNumeric] = useState(false);
   const [showRef, setShowRef] = useState(false);
   const [expandedOutput, setExpandedOutput] = useState(null); // "roman" | "numeric" | null
-  const [isScanning, setIsScanning] = useState(false);
+  const [scanningSource, setScanningSource] = useState(null); // "file" | "camera" | null
   const [scanError, setScanError] = useState(null);
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
@@ -150,8 +150,52 @@ export default function RomanCipher() {
     }
   }, [numericBreakdown]);
 
-  const processImage = useCallback(async (file) => {
-    setIsScanning(true);
+  // Validate if text looks like Roman numerals or numeric cipher
+  const validateCipherFormat = useCallback((text) => {
+    // Clean the text first
+    const cleaned = text.toUpperCase().replace(/[^A-Z0-9.\-\s]/g, '').trim();
+
+    if (!cleaned) return { valid: false, text: '' };
+
+    // Try to extract valid Roman numeral sequences
+    const romanMatches = cleaned.match(/[IVXLCDM]+/g);
+    const numericMatches = cleaned.match(/\b\d{1,2}\b/g);
+
+    // Check if we have meaningful Roman numeral content
+    if (romanMatches && romanMatches.length >= 1) {
+      // Verify they're valid Roman numerals (letters that form valid numbers)
+      const validRomanNumerals = romanMatches.filter(match => {
+        // Check if it only contains valid Roman numeral characters
+        // and follows basic Roman numeral rules
+        return /^M{0,3}(CM|CD|D?C{0,3})(XC|XL|L?X{0,3})(IX|IV|V?I{0,3})$/.test(match) ||
+               /^[IVXLCDM]{1,6}$/.test(match); // Simpler check for short numerals
+      });
+
+      if (validRomanNumerals.length >= 1) {
+        // Reconstruct with proper format
+        const formatted = validRomanNumerals.join('.');
+        return { valid: true, text: formatted, type: 'roman' };
+      }
+    }
+
+    // Check if we have numeric cipher content (numbers 1-26)
+    if (numericMatches && numericMatches.length >= 1) {
+      const validNumbers = numericMatches.filter(n => {
+        const num = parseInt(n, 10);
+        return num >= 1 && num <= 26;
+      });
+
+      if (validNumbers.length >= 1) {
+        const formatted = validNumbers.join('.');
+        return { valid: true, text: formatted, type: 'numeric' };
+      }
+    }
+
+    return { valid: false, text: cleaned };
+  }, []);
+
+  const processImage = useCallback(async (file, source) => {
+    setScanningSource(source);
     setScanError(null);
     try {
       const { createWorker } = await import('tesseract.js');
@@ -159,29 +203,45 @@ export default function RomanCipher() {
       const { data: { text } } = await worker.recognize(file);
       await worker.terminate();
 
-      // Clean up the OCR text - normalize whitespace and remove extra characters
+      // Clean up the OCR text - normalize whitespace
       const cleanedText = text
         .replace(/\n/g, ' ')
         .replace(/\s+/g, ' ')
         .trim();
 
-      if (cleanedText) {
-        setInput(cleanedText);
-      } else {
+      if (!cleanedText) {
         setScanError("No text detected in image");
+        return;
+      }
+
+      // Validate the format
+      const validation = validateCipherFormat(cleanedText);
+
+      if (validation.valid) {
+        setInput(validation.text);
+      } else {
+        setScanError("Could not identify Roman numerals or numeric cipher. Please use a clearer image.");
       }
     } catch (err) {
       console.error('OCR Error:', err);
       setScanError("Could not read text from image");
     } finally {
-      setIsScanning(false);
+      setScanningSource(null);
     }
-  }, []);
+  }, [validateCipherFormat]);
 
   const handleFileSelect = useCallback((e) => {
     const file = e.target.files?.[0];
     if (file && file.type.startsWith('image/')) {
-      processImage(file);
+      processImage(file, 'file');
+    }
+    e.target.value = ''; // Reset for same file re-upload
+  }, [processImage]);
+
+  const handleCameraSelect = useCallback((e) => {
+    const file = e.target.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      processImage(file, 'camera');
     }
     e.target.value = ''; // Reset for same file re-upload
   }, [processImage]);
@@ -675,23 +735,23 @@ export default function RomanCipher() {
               <button
                 className="scan-btn"
                 onClick={() => fileInputRef.current?.click()}
-                disabled={isScanning}
+                disabled={scanningSource !== null}
               >
-                {isScanning ? (
+                {scanningSource === 'file' ? (
                   <span className="spinner" />
                 ) : (
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" />
                   </svg>
                 )}
-                {isScanning ? "Scanning..." : "Upload Image"}
+                {scanningSource === 'file' ? "Scanning..." : "Upload Image"}
               </button>
               <button
                 className="scan-btn mobile-only"
                 onClick={() => cameraInputRef.current?.click()}
-                disabled={isScanning}
+                disabled={scanningSource !== null}
               >
-                {isScanning ? (
+                {scanningSource === 'camera' ? (
                   <span className="spinner" />
                 ) : (
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -699,7 +759,7 @@ export default function RomanCipher() {
                     <circle cx="12" cy="13" r="4" />
                   </svg>
                 )}
-                Scan Camera
+                {scanningSource === 'camera' ? "Scanning..." : "Scan Camera"}
               </button>
               {/* Hidden file inputs */}
               <input
@@ -714,7 +774,7 @@ export default function RomanCipher() {
                 type="file"
                 accept="image/*"
                 capture="environment"
-                onChange={handleFileSelect}
+                onChange={handleCameraSelect}
                 style={{ display: "none" }}
               />
             </div>

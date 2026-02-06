@@ -1,0 +1,17 @@
+{
+  "name": "Roman Numeral Cipher",
+  "short_name": "Roman Cipher",
+  "description": "Transform words into ancient Roman numeral ciphers",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0a08",
+  "theme_color": "#d4af37",
+  "icons": [
+    {
+      "src": "/apple-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

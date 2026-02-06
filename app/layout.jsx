@@ -1,6 +1,12 @@
 export const metadata = {
   title: "Roman Numeral Cipher",
   description: "Transform words into ancient Roman numeral ciphers",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Roman Cipher",
+  },
 };
 
 export const viewport = {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback, useRef } from "react";
+import { useState, useMemo, useCallback } from "react";
 
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
@@ -111,10 +111,6 @@ export default function RomanCipher() {
   const [copiedNumeric, setCopiedNumeric] = useState(false);
   const [showRef, setShowRef] = useState(false);
   const [expandedOutput, setExpandedOutput] = useState(null); // "roman" | "numeric" | null
-  const [scanningSource, setScanningSource] = useState(null); // "file" | "camera" | null
-  const [scanError, setScanError] = useState(null);
-  const fileInputRef = useRef(null);
-  const cameraInputRef = useRef(null);
 
   const output = useMemo(() => {
     if (!input.trim()) return "";
@@ -131,6 +127,7 @@ export default function RomanCipher() {
     if (!input.trim() || mode !== "encode") return [];
     return encodeBreakdown(input);
   }, [input, mode]);
+
 
   const handleCopy = useCallback(async () => {
     if (!output) return;
@@ -149,103 +146,6 @@ export default function RomanCipher() {
       setTimeout(() => setCopiedNumeric(false), 2000);
     }
   }, [numericBreakdown]);
-
-  // Validate if text looks like Roman numerals or numeric cipher
-  const validateCipherFormat = useCallback((text) => {
-    // Clean the text first
-    const cleaned = text.toUpperCase().replace(/[^A-Z0-9.\-\s]/g, '').trim();
-
-    if (!cleaned) return { valid: false, text: '' };
-
-    // Try to extract valid Roman numeral sequences
-    const romanMatches = cleaned.match(/[IVXLCDM]+/g);
-    const numericMatches = cleaned.match(/\b\d{1,2}\b/g);
-
-    // Check if we have meaningful Roman numeral content
-    if (romanMatches && romanMatches.length >= 1) {
-      // Verify they're valid Roman numerals (letters that form valid numbers)
-      const validRomanNumerals = romanMatches.filter(match => {
-        // Check if it only contains valid Roman numeral characters
-        // and follows basic Roman numeral rules
-        return /^M{0,3}(CM|CD|D?C{0,3})(XC|XL|L?X{0,3})(IX|IV|V?I{0,3})$/.test(match) ||
-               /^[IVXLCDM]{1,6}$/.test(match); // Simpler check for short numerals
-      });
-
-      if (validRomanNumerals.length >= 1) {
-        // Reconstruct with proper format
-        const formatted = validRomanNumerals.join('.');
-        return { valid: true, text: formatted, type: 'roman' };
-      }
-    }
-
-    // Check if we have numeric cipher content (numbers 1-26)
-    if (numericMatches && numericMatches.length >= 1) {
-      const validNumbers = numericMatches.filter(n => {
-        const num = parseInt(n, 10);
-        return num >= 1 && num <= 26;
-      });
-
-      if (validNumbers.length >= 1) {
-        const formatted = validNumbers.join('.');
-        return { valid: true, text: formatted, type: 'numeric' };
-      }
-    }
-
-    return { valid: false, text: cleaned };
-  }, []);
-
-  const processImage = useCallback(async (file, source) => {
-    setScanningSource(source);
-    setScanError(null);
-    try {
-      const { createWorker } = await import('tesseract.js');
-      const worker = await createWorker('eng');
-      const { data: { text } } = await worker.recognize(file);
-      await worker.terminate();
-
-      // Clean up the OCR text - normalize whitespace
-      const cleanedText = text
-        .replace(/\n/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim();
-
-      if (!cleanedText) {
-        setScanError("No text detected in image");
-        return;
-      }
-
-      // Validate the format
-      const validation = validateCipherFormat(cleanedText);
-
-      if (validation.valid) {
-        setInput(validation.text);
-      } else {
-        setScanError("Could not identify Roman numerals or numeric cipher. Please use a clearer image.");
-      }
-    } catch (err) {
-      console.error('OCR Error:', err);
-      setScanError("Could not read text from image");
-    } finally {
-      setScanningSource(null);
-    }
-  }, [validateCipherFormat]);
-
-  const handleFileSelect = useCallback((e) => {
-    const file = e.target.files?.[0];
-    if (file && file.type.startsWith('image/')) {
-      processImage(file, 'file');
-    }
-    e.target.value = ''; // Reset for same file re-upload
-  }, [processImage]);
-
-  const handleCameraSelect = useCallback((e) => {
-    const file = e.target.files?.[0];
-    if (file && file.type.startsWith('image/')) {
-      processImage(file, 'camera');
-    }
-    e.target.value = ''; // Reset for same file re-upload
-  }, [processImage]);
-
 
   return (
     <div style={{
@@ -292,13 +192,18 @@ export default function RomanCipher() {
           color: #e8e4df;
           padding: 12px 16px;
           width: 100%;
-          height: 68px;
+          height: 84px;
           resize: none;
           outline: none;
           transition: border-color 0.3s, box-shadow 0.3s;
           letter-spacing: 0.5px;
           overflow-y: auto;
           overflow-x: hidden;
+          line-height: 1.5;
+          vertical-align: top;
+          -webkit-appearance: none;
+          appearance: none;
+          box-sizing: border-box;
         }
         textarea:focus {
           border-color: rgba(212, 175, 55, 0.5);
@@ -585,66 +490,6 @@ export default function RomanCipher() {
           to { opacity: 1; }
         }
 
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-
-        .scan-btn {
-          font-family: 'Cinzel', serif;
-          font-size: 10px;
-          letter-spacing: 2px;
-          text-transform: uppercase;
-          padding: 8px 14px;
-          border: 1.5px solid rgba(184, 150, 12, 0.25);
-          border-radius: 6px;
-          background: rgba(255, 255, 255, 0.05);
-          color: rgba(255, 255, 255, 0.6);
-          cursor: pointer;
-          transition: all 0.3s;
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-        }
-        .scan-btn:hover {
-          border-color: rgba(212, 175, 55, 0.45);
-          color: rgba(255, 255, 255, 0.85);
-          background: rgba(255, 255, 255, 0.08);
-        }
-        .scan-btn:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-        .scan-btn svg {
-          width: 14px;
-          height: 14px;
-        }
-
-        .spinner {
-          width: 14px;
-          height: 14px;
-          border: 2px solid rgba(212, 175, 55, 0.3);
-          border-top-color: #d4af37;
-          border-radius: 50%;
-          animation: spin 0.8s linear infinite;
-        }
-
-        .scan-error {
-          color: #e57373;
-          font-size: 11px;
-          margin-top: 6px;
-          font-family: 'JetBrains Mono', monospace;
-        }
-
-        .mobile-only {
-          display: none;
-        }
-        @media (max-width: 600px) {
-          .mobile-only {
-            display: inline-flex;
-          }
-        }
-
         @keyframes slideUp {
           from { transform: translateX(-50%) translateY(100%); }
           to { transform: translateX(-50%) translateY(0); }
@@ -707,11 +552,11 @@ export default function RomanCipher() {
         <div className="fade-in-d1" style={{ display: "flex", justifyContent: "center", gap: 10, marginBottom: 8 }}>
           <button
             className={`mode-btn ${mode === "encode" ? "active" : ""}`}
-            onClick={() => { setMode("encode"); setInput(""); setScanError(null); }}
+            onClick={() => { setMode("encode"); setInput(""); }}
           >Encode</button>
           <button
             className={`mode-btn ${mode === "decode" ? "active" : ""}`}
-            onClick={() => { setMode("decode"); setInput(""); setScanError(null); }}
+            onClick={() => { setMode("decode"); setInput(""); }}
           >Decode</button>
         </div>
 
@@ -729,65 +574,9 @@ export default function RomanCipher() {
             {mode === "encode" ? "Enter text to encode" : "Enter Roman numerals to decode"}
           </label>
 
-          {/* Scanner buttons - Decode mode only */}
-          {mode === "decode" && (
-            <div style={{ display: "flex", gap: 8, marginBottom: 8, flexWrap: "wrap" }}>
-              <button
-                className="scan-btn"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={scanningSource !== null}
-              >
-                {scanningSource === 'file' ? (
-                  <span className="spinner" />
-                ) : (
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" />
-                  </svg>
-                )}
-                {scanningSource === 'file' ? "Scanning..." : "Upload Image"}
-              </button>
-              <button
-                className="scan-btn mobile-only"
-                onClick={() => cameraInputRef.current?.click()}
-                disabled={scanningSource !== null}
-              >
-                {scanningSource === 'camera' ? (
-                  <span className="spinner" />
-                ) : (
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
-                    <circle cx="12" cy="13" r="4" />
-                  </svg>
-                )}
-                {scanningSource === 'camera' ? "Scanning..." : "Scan Camera"}
-              </button>
-              {/* Hidden file inputs */}
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleFileSelect}
-                style={{ display: "none" }}
-              />
-              <input
-                ref={cameraInputRef}
-                type="file"
-                accept="image/*"
-                capture="environment"
-                onChange={handleCameraSelect}
-                style={{ display: "none" }}
-              />
-            </div>
-          )}
-
-          {/* Scan error message */}
-          {scanError && mode === "decode" && (
-            <p className="scan-error">{scanError}</p>
-          )}
-
           <textarea
             value={input}
-            onChange={e => { setInput(e.target.value); setScanError(null); }}
+            onChange={e => setInput(e.target.value)}
             placeholder={
               mode === "encode"
                 ? "Type any word, phrase, or sentence..."
@@ -828,23 +617,23 @@ export default function RomanCipher() {
                   color: "#e8e4df",
                 }}>{output}</span>
               ) : (
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "4px 0", alignItems: "flex-start" }}>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "4px 0", alignItems: "stretch" }}>
                   {letterBreakdown.map((word, wi) => (
-                    <div key={wi} style={{ display: "flex", alignItems: "flex-start" }}>
+                    <div key={wi} style={{ display: "flex", alignItems: "stretch" }}>
                       {wi > 0 && (
-                        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", margin: "0 6px" }}>
+                        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "space-between", margin: "0 6px" }}>
                           <span style={{ color: "#d4af37", fontSize: 15, fontFamily: "'JetBrains Mono', monospace", lineHeight: "1.8" }}>-</span>
                           <span style={{ fontSize: 11, visibility: "hidden" }}>-</span>
                         </div>
                       )}
                       {word.map((item, li) => (
-                        <div key={li} style={{ display: "flex", alignItems: "flex-start" }}>
-                          <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                        <div key={li} style={{ display: "flex", alignItems: "stretch" }}>
+                          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "space-between" }}>
                             <span style={{ color: "#d4af37", fontSize: 15, fontFamily: "'JetBrains Mono', monospace", letterSpacing: 0, lineHeight: "1.8" }}>{item.roman}</span>
                             <span style={{ fontFamily: "'Cinzel', serif", color: "rgba(255, 255, 255, 0.7)", fontSize: 11 }}>{item.letter}</span>
                           </div>
                           {li < word.length - 1 && (
-                            <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "space-between" }}>
                               <span style={{ color: "#d4af37", fontSize: 15, fontFamily: "'JetBrains Mono', monospace", lineHeight: "1.8" }}>.</span>
                               <span style={{ fontSize: 11, visibility: "hidden" }}>.</span>
                             </div>
@@ -990,23 +779,23 @@ export default function RomanCipher() {
                     color: "#e8e4df",
                   }}>{output}</span>
                 ) : (
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: "4px 0", alignItems: "flex-start" }}>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "4px 0", alignItems: "stretch" }}>
                     {letterBreakdown.map((word, wi) => (
-                      <div key={wi} style={{ display: "flex", alignItems: "flex-start" }}>
+                      <div key={wi} style={{ display: "flex", alignItems: "stretch" }}>
                         {wi > 0 && (
-                          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", margin: "0 6px" }}>
+                          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "space-between", margin: "0 6px" }}>
                             <span style={{ color: "#d4af37", fontSize: 15, fontFamily: "'JetBrains Mono', monospace", lineHeight: "1.8" }}>-</span>
                             <span style={{ fontSize: 11, visibility: "hidden" }}>-</span>
                           </div>
                         )}
                         {word.map((item, li) => (
-                          <div key={li} style={{ display: "flex", alignItems: "flex-start" }}>
-                            <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                          <div key={li} style={{ display: "flex", alignItems: "stretch" }}>
+                            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "space-between" }}>
                               <span style={{ color: "#d4af37", fontSize: 15, fontFamily: "'JetBrains Mono', monospace", letterSpacing: 0, lineHeight: "1.8" }}>{item.roman}</span>
                               <span style={{ fontFamily: "'Cinzel', serif", color: "rgba(255, 255, 255, 0.7)", fontSize: 11 }}>{item.letter}</span>
                             </div>
                             {li < word.length - 1 && (
-                              <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "space-between" }}>
                                 <span style={{ color: "#d4af37", fontSize: 15, fontFamily: "'JetBrains Mono', monospace", lineHeight: "1.8" }}>.</span>
                                 <span style={{ fontSize: 11, visibility: "hidden" }}>.</span>
                               </div>

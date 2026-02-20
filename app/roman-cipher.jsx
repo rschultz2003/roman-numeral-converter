@@ -127,19 +127,29 @@ for (let i = 0; i < 26; i++) {
 function encodeText(text) {
   const words = text.toUpperCase().split(/\s+/).filter(Boolean);
   return words.map(word => {
+    if (/^\d+$/.test(word)) {
+      const n = parseInt(word, 10);
+      return n > 0 ? toRoman(n) : "";
+    }
     return [...word]
       .filter(ch => /[A-Z]/.test(ch))
       .map(ch => LETTER_MAP[ch]?.roman || "")
       .filter(Boolean)
       .join(".");
-  }).join(" - ");
+  }).filter(Boolean).join(" - ");
 }
 
 function decodeText(encoded) {
   const words = encoded.split(" - ");
   return words.map(word => {
-    const numerals = word.split(".");
-    return numerals
+    const parts = word.split(".");
+    if (parts.length === 1) {
+      const num = fromRoman(parts[0].trim().toUpperCase());
+      if (num > 26) return String(num);
+      if (num >= 1) return ALPHABET[num - 1];
+      return "?";
+    }
+    return parts
       .map(n => {
         const num = fromRoman(n.trim().toUpperCase());
         if (num >= 1 && num <= 26) return ALPHABET[num - 1];
@@ -152,6 +162,11 @@ function decodeText(encoded) {
 function encodeBreakdown(text) {
   const words = text.toUpperCase().split(/\s+/).filter(Boolean);
   return words.map(word => {
+    if (/^\d+$/.test(word)) {
+      const n = parseInt(word, 10);
+      if (n <= 0) return [];
+      return [{ number: n, roman: toRoman(n) }];
+    }
     return [...word]
       .filter(ch => /[A-Z]/.test(ch))
       .map(ch => ({ letter: ch, roman: LETTER_MAP[ch]?.roman || "" }))
@@ -162,12 +177,16 @@ function encodeBreakdown(text) {
 function encodeWithNumbers(text) {
   const words = text.toUpperCase().split(/\s+/).filter(Boolean);
   return words.map(word => {
+    if (/^\d+$/.test(word)) {
+      const n = parseInt(word, 10);
+      return n > 0 ? String(n) : "";
+    }
     return [...word]
       .filter(ch => /[A-Z]/.test(ch))
       .map(ch => LETTER_MAP[ch]?.number || "")
       .filter(Boolean)
       .join(".");
-  }).join(" - ");
+  }).filter(Boolean).join(" - ");
 }
 
 function copyToClipboard(text) {
@@ -845,7 +864,7 @@ export default function RomanCipher() {
                         <div key={li} style={{ display: "flex", alignItems: "stretch" }}>
                           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "space-between" }}>
                             <span style={{ color: colors.accentGoldText, fontSize: 15, fontFamily: "'JetBrains Mono', monospace", letterSpacing: 0, lineHeight: "1.8" }}>{item.roman}</span>
-                            <span style={{ fontFamily: "'Cinzel', serif", color: colors.textSecondary, fontSize: 11 }}>{item.letter}</span>
+                            <span style={{ fontFamily: "'Cinzel', serif", color: colors.textSecondary, fontSize: 11 }}>{item.letter || item.number}</span>
                           </div>
                           {li < word.length - 1 && (
                             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "space-between" }}>
@@ -1007,7 +1026,7 @@ export default function RomanCipher() {
                           <div key={li} style={{ display: "flex", alignItems: "stretch" }}>
                             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "space-between" }}>
                               <span style={{ color: colors.accentGoldText, fontSize: 15, fontFamily: "'JetBrains Mono', monospace", letterSpacing: 0, lineHeight: "1.8" }}>{item.roman}</span>
-                              <span style={{ fontFamily: "'Cinzel', serif", color: colors.textSecondary, fontSize: 11 }}>{item.letter}</span>
+                              <span style={{ fontFamily: "'Cinzel', serif", color: colors.textSecondary, fontSize: 11 }}>{item.letter || item.number}</span>
                             </div>
                             {li < word.length - 1 && (
                               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "space-between" }}>

@@ -139,19 +139,36 @@ function encodeText(text) {
   }).filter(Boolean).join(" - ");
 }
 
+const VALID_ROMAN_RE = /^[IVXLCDM]+$/i;
+
+function isValidDecodeInput(text) {
+  const words = text.split(" - ");
+  return words.some(word => {
+    const parts = word.split(".");
+    return parts.some(p => VALID_ROMAN_RE.test(p.trim()));
+  });
+}
+
 function decodeText(encoded) {
+  if (!isValidDecodeInput(encoded)) {
+    return null;
+  }
   const words = encoded.split(" - ");
   return words.map(word => {
     const parts = word.split(".");
     if (parts.length === 1) {
-      const num = fromRoman(parts[0].trim().toUpperCase());
+      const trimmed = parts[0].trim().toUpperCase();
+      if (!VALID_ROMAN_RE.test(trimmed)) return "?";
+      const num = fromRoman(trimmed);
       if (num > 26) return String(num);
       if (num >= 1) return ALPHABET[num - 1];
       return "?";
     }
     return parts
       .map(n => {
-        const num = fromRoman(n.trim().toUpperCase());
+        const trimmed = n.trim().toUpperCase();
+        if (!VALID_ROMAN_RE.test(trimmed)) return "?";
+        const num = fromRoman(trimmed);
         if (num >= 1 && num <= 26) return ALPHABET[num - 1];
         return "?";
       })
@@ -819,6 +836,29 @@ export default function RomanCipher() {
           />
         </div>
 
+
+        {/* Invalid decode input message */}
+        {mode === "decode" && input.trim() && output === null && (
+          <div className="fade-in" style={{ marginBottom: 8 }}>
+            <div className="output-box" style={{ cursor: "default", justifyContent: "center", alignItems: "center" }}>
+              <p style={{
+                fontFamily: "'Cormorant Garamond', 'Georgia', serif",
+                fontSize: 16,
+                fontStyle: "italic",
+                color: colors.textMuted,
+                textAlign: "center",
+                letterSpacing: 0.5,
+                lineHeight: 1.6,
+              }}>
+                Enter Roman numerals separated by dots and dashes
+                <br />
+                <span style={{ fontSize: 14, color: colors.textFaint }}>
+                  e.g. VIII.V.XII - XLII
+                </span>
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Output */}
         {output && (
